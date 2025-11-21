@@ -1,0 +1,134 @@
+PONG GAME - EASY SETUP GUIDE
+=============================
+
+👥 WHAT YOU NEED
+- 2 computers (or 2 terminal windows on 1 computer)
+- Python installed
+- This project folder
+
+📦 STEP 1: INSTALL PYGAME
+Open terminal and type:
+    pip install pygame
+
+That's it for setup!
+
+🎮 HOW TO PLAY (Same Computer)
+================================
+
+You need 3 terminal windows. Here's how:
+
+TERMINAL 1 - START THE SERVER
+------------------------------
+1. Open a terminal
+2. Type: cd pong
+3. Type: python pongServer.py
+4. You should see "Waiting for 2 players to connect..."
+5. LEAVE THIS RUNNING! Don't close it.
+
+TERMINAL 2 - PLAYER 1 (Left Paddle)
+------------------------------------
+1. Open a NEW terminal (don't close terminal 1!)
+2. Type: cd pong
+3. Type: python pongClient.py
+4. A Pong game window will appear
+5. Wait for player 2...
+
+TERMINAL 3 - PLAYER 2 (Right Paddle)
+------------------------------------
+1. Open ANOTHER NEW terminal
+2. Type: cd pong
+3. Type: python pongClient.py
+4. Another Pong game window appears
+5. THE GAME STARTS!
+
+🕹️ HOW TO CONTROL
+------------------
+Both players use arrow keys:
+- UP arrow = move paddle up
+- DOWN arrow = move paddle down
+
+First to 5 points wins!
+
+🌐 PLAY WITH A FRIEND (Different Computers)
+============================================
+
+ON THE SERVER COMPUTER (Host):
+-------------------------------
+1. Find your IP address:
+   - Mac: System Settings → Network → Your IP is there
+   - Windows: Open Command Prompt, type: ipconfig
+   - Look for something like: 192.168.1.5
+   
+2. Write down your IP address!
+
+3. Open terminal and type:
+   cd pong
+   python pongServer.py
+
+4. Server is running! Tell your friend your IP address.
+
+ON YOUR FRIEND'S COMPUTER (Player):
+------------------------------------
+1. Open the file pongClient.py in a text editor
+
+2. Find this line near the bottom:
+   SERVER_IP = "127.0.0.1"
+
+3. Change it to your IP address. Example:
+   SERVER_IP = "192.168.1.5"
+
+4. Save the file
+
+5. Open terminal and type:
+   cd pong
+   python pongClient.py
+
+6. Game window appears!
+
+ON YOUR COMPUTER (Host is also Player):
+----------------------------------------
+1. Open another terminal
+2. Type: cd pong
+3. Type: python pongClient.py
+4. Game starts when both connected!
+
+⚠️ TROUBLESHOOTING
+==================
+
+Problem: "No module named pygame"
+Fix: Type: pip install pygame
+
+Problem: "No module named _tkinter"
+Fix: You have the no-GUI version, this is fine! Just use it as-is.
+
+Problem: "Connection refused"
+Fix: Make sure the server is running first in Terminal 1!
+
+Problem: Game closes immediately
+Fix: Make sure both pongServer.py and pongClient.py are the FIXED versions
+
+Problem: Can't connect from different computers
+Fix: Make sure you're on the same WiFi network!
+
+Problem: Ball doesn't move or game is weird
+Fix: You need to use the FIXED versions of the files (pongServer_fixed.py and pongClient_fixed.py)
+
+🎯 QUICK SUMMARY
+================
+1. Server first (python pongServer.py)
+2. Client 1 second (python pongClient.py) 
+3. Client 2 third (python pongClient.py)
+4. Use arrow keys to play!
+5. First to 5 wins!
+
+That's it! Have fun! 🏓
+
+📝 WHAT FILES DO I NEED?
+=========================
+pongServer.py (or pongServer_fixed.py)
+pongClient.py (or pongClient_fixed.py)
+assets/ folder (has sounds and images)
+
+If you downloaded files with "_fixed" in the name, rename them:
+- pongServer_fixed.py → pongServer.py
+- pongClient_fixed.py → pongClient.py
