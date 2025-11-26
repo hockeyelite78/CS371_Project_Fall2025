@@ -112,6 +112,17 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 pygame.quit()
                 sys.exit()
         
+        # Send a heartbeat to server to trigger response with both_connected flag
+        try:
+            heartbeat = {
+                'paddle_y': playerPaddleObj.rect.y,
+                'moving': '',
+                'sync': 0
+            }
+            client.sendall(json.dumps(heartbeat).encode() + b'\n')
+        except:
+            pass
+        
         # Check if opponent connected
         with data_lock:
             if server_data.get('both_connected', False):
@@ -126,6 +137,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         
         pygame.display.flip()
         clock.tick(10)
+        time.sleep(0.1)  # Small delay to not spam server
     
     # Brief countdown
     for count in [3, 2, 1]:
