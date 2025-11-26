@@ -11,17 +11,18 @@ import json
 
 # Global game state
 game_state = {
-    'left_paddle_y': 215,  # (480/2) - (50/2) = starting Y position
+    'left_paddle_y': 215,
     'right_paddle_y': 215,
-    'ball_x': 320,  # 640/2
-    'ball_y': 240,  # 480/2
+    'ball_x': 320,
+    'ball_y': 240,
     'ball_xVel': -5,
     'ball_yVel': 0,
     'left_score': 0,
     'right_score': 0,
     'sync': 0,
     'left_moving': '',
-    'right_moving': ''
+    'right_moving': '',
+    'both_connected': False
 }
 
 # Lock for thread-safe access to game state
@@ -78,7 +79,7 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                                 game_state['left_paddle_y'] = update.get('paddle_y', game_state['left_paddle_y'])
                                 game_state['left_moving'] = update.get('moving', '')
                                 
-                                # If this client is authoritative for ball position
+                                # LEFT player is authoritative for ball and scores
                                 if 'ball_x' in update:
                                     game_state['ball_x'] = update['ball_x']
                                     game_state['ball_y'] = update['ball_y']
@@ -93,23 +94,15 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                             else:  # right player
                                 game_state['right_paddle_y'] = update.get('paddle_y', game_state['right_paddle_y'])
                                 game_state['right_moving'] = update.get('moving', '')
-                                
-                                # If this client is authoritative for ball position
-                                if 'ball_x' in update:
-                                    game_state['ball_x'] = update['ball_x']
-                                    game_state['ball_y'] = update['ball_y']
-                                    game_state['ball_xVel'] = update['ball_xVel']
-                                    game_state['ball_yVel'] = update['ball_yVel']
-                                
-                                if 'left_score' in update:
-                                    game_state['left_score'] = update['left_score']
-                                if 'right_score' in update:
-                                    game_state['right_score'] = update['right_score']
                             
                             # Update sync counter
                             client_sync = update.get('sync', 0)
                             if client_sync > game_state['sync']:
                                 game_state['sync'] = client_sync
+                            
+                            # Check if both players are connected
+                            with client_lock:
+                                game_state['both_connected'] = (clients['left'] is not None and clients['right'] is not None)
                         
                         # Send current game state back to client
                         with state_lock:
@@ -124,7 +117,8 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                                 'right_score': game_state['right_score'],
                                 'sync': game_state['sync'],
                                 'left_moving': game_state['left_moving'],
-                                'right_moving': game_state['right_moving']
+                                'right_moving': game_state['right_moving'],
+                                'both_connected': game_state['both_connected']
                             }
                         
                         client_socket.sendall(json.dumps(response).encode() + b'\n')
@@ -143,6 +137,8 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
         print(f"Player {player_side} disconnected")
         with client_lock:
             clients[player_side] = None
+        with state_lock:
+            game_state['both_connected'] = False
         client_socket.close()
 
 
@@ -202,14 +198,12 @@ def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
 
 
 if __name__ == "__main__":
-    # Default port
     PORT = 12345
     
     print("=" * 50)
     print("Pong Game Server")
     print("=" * 50)
     
-    # You can change the port here if needed
     try:
         start_server(port=PORT)
     except Exception as e:
