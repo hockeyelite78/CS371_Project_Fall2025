@@ -8,7 +8,7 @@ PONG GAME - EASY SETUP GUIDE
 
 📦 STEP 1: INSTALL PYGAME
 Open terminal and type:
-    pip install pygame
+    pip install -r ./requirements.txt
 
 That's it for setup!
 
