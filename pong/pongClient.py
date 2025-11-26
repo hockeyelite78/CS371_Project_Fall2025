@@ -7,6 +7,7 @@
 # =================================================================================================
 
 import pygame
+import tkinter as tk
 import sys
 import socket
 import json
@@ -245,22 +246,48 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # =========================================================================================
 
 
-def joinServer(ip: str, port: int) -> None:
-    """
-    # Author:       David Macara
-    # Purpose:      Connect to server and start the game
-    # Pre:          Server is running at ip:port
-    # Post:         Game starts with received parameters
-    """
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.settimeout(10)
+
+
+# This is where you will connect to the server to get the info required to call the game loop.  Mainly
+# the screen width, height and player paddle (either "left" or "right")
+# If you want to hard code the screen's dimensions into the code, that's fine, but you will need to know
+# which client is which
+def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
+    # Purpose:      This method is fired when the join button is clicked
+    # Arguments:
+    # ip            A string holding the IP address of the server
+    # port          A string holding the port the server is using
+    # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
+    # app           The tk window object, needed to kill the window
+    
+    # Validate inputs
+    if not ip or not port:
+        errorLabel.config(text="Please enter both IP address and port")
+        errorLabel.update()
+        return
     
     try:
-        print(f"Connecting to {ip}:{port}...")
-        client.connect((ip, port))
-        print("Connected! Waiting for game info...")
+        port_num = int(port)
+    except ValueError:
+        errorLabel.config(text="Port must be a number")
+        errorLabel.update()
+        return
+    
+    # Create a socket and connect to the server
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.settimeout(10)  # 10 second timeout for connection
+    
+    try:
+        errorLabel.config(text=f"Connecting to {ip}:{port}...")
+        errorLabel.update()
         
-        # Receive initial game info
+        # Connect to server
+        client.connect((ip, port_num))
+        
+        errorLabel.config(text="Connected! Waiting for game info...")
+        errorLabel.update()
+        
+        # Receive initial game info from server
         buffer = ""
         while '\n' not in buffer:
             data = client.recv(1024).decode()
@@ -271,36 +298,83 @@ def joinServer(ip: str, port: int) -> None:
         message = buffer.split('\n')[0]
         game_info = json.loads(message)
         
+        # Check for errors
         if 'error' in game_info:
-            print(f"Server error: {game_info['error']}")
+            errorLabel.config(text=f"Server error: {game_info['error']}")
+            errorLabel.update()
+            client.close()
             return
         
+        # Extract game parameters
         screenWidth = game_info['screen_width']
         screenHeight = game_info['screen_height']
         playerPaddle = game_info['player_paddle']
         
-        print(f"Starting game as {playerPaddle} player...")
+        errorLabel.config(text=f"Starting game as {playerPaddle} player...")
+        errorLabel.update()
+        
+        # Remove timeout for gameplay
         client.settimeout(None)
         
+        # Close this window and start the game
+        app.withdraw()
         playGame(screenWidth, screenHeight, playerPaddle, client)
+        app.quit()
         
     except socket.timeout:
-        print("Connection timeout - server not responding")
+        errorLabel.config(text="Connection timeout - server not responding")
+        errorLabel.update()
+        client.close()
     except ConnectionRefusedError:
-        print("Connection refused - is the server running?")
+        errorLabel.config(text="Connection refused - is the server running?")
+        errorLabel.update()
+        client.close()
+    except json.JSONDecodeError:
+        errorLabel.config(text="Invalid response from server")
+        errorLabel.update()
+        client.close()
     except Exception as e:
-        print(f"Error: {e}")
-    finally:
+        errorLabel.config(text=f"Error: {str(e)}")
+        errorLabel.update()
         client.close()
 
 
+# This displays the opening screen, you don't need to edit this (but may if you like)
+def startScreen():
+    app = tk.Tk()
+    app.title("Server Info")
+
+    image = tk.PhotoImage(file="./assets/images/logo.png")
+
+    titleLabel = tk.Label(image=image)
+    titleLabel.grid(column=0, row=0, columnspan=2)
+
+    ipLabel = tk.Label(text="Server IP:")
+    ipLabel.grid(column=0, row=1, sticky="W", padx=8)
+
+    ipEntry = tk.Entry(app)
+    ipEntry.grid(column=1, row=1)
+    ipEntry.insert(0, "127.0.0.1")  # Default to localhost
+
+    portLabel = tk.Label(text="Server Port:")
+    portLabel.grid(column=0, row=2, sticky="W", padx=8)
+
+    portEntry = tk.Entry(app)
+    portEntry.grid(column=1, row=2)
+    portEntry.insert(0, "12345")  # Default port
+
+    errorLabel = tk.Label(text="")
+    errorLabel.grid(column=0, row=4, columnspan=2)
+
+    joinButton = tk.Button(text="Join", command=lambda: joinServer(ipEntry.get(), portEntry.get(), errorLabel, app))
+    joinButton.grid(column=0, row=3, columnspan=2)
+
+    app.mainloop()
+
 if __name__ == "__main__":
-    # Direct connection - no GUI needed
-    SERVER_IP = "127.0.0.1"  # Change this if server is on different machine
-    SERVER_PORT = 12345
+    startScreen()
     
-    print("=" * 50)
-    print("Pong Game Client")
-    print("=" * 50)
-    
-    joinServer(SERVER_IP, SERVER_PORT)
+    # Uncomment the line below if you want to play the game without a server to see how it should work
+    # the startScreen() function should call playGame with the arguments given to it by the server this is
+    # here for demo purposes only
+    # playGame(640, 480,"left",socket.socket(socket.AF_INET, socket.SOCK_STREAM))
