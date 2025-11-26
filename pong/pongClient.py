@@ -19,7 +19,6 @@ from assets.code.helperCode import *
 # Global variable for receiving data from server
 server_data = {}
 data_lock = threading.Lock()
-opponent_connected = False
 
 def receive_updates(client: socket.socket) -> None:
     """
@@ -28,7 +27,7 @@ def receive_updates(client: socket.socket) -> None:
     # Pre:          Client socket is connected to server
     # Post:         server_data is updated with latest game state
     """
-    global server_data, opponent_connected
+    global server_data
     buffer = ""
     
     try:
@@ -48,9 +47,6 @@ def receive_updates(client: socket.socket) -> None:
                         update = json.loads(message)
                         with data_lock:
                             server_data.update(update)
-                            # Check if both players are connected
-                            if 'both_connected' in update:
-                                opponent_connected = update['both_connected']
                     except json.JSONDecodeError:
                         continue
     except Exception as e:
@@ -107,7 +103,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     receiver_thread.start()
 
     # Waiting for opponent screen
-    global opponent_connected
     waiting = True
     while waiting:
         screen.fill((0,0,0))
@@ -119,7 +114,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         
         # Check if opponent connected
         with data_lock:
-            if opponent_connected:
+            if server_data.get('both_connected', False):
                 waiting = False
         
         # Draw waiting message
