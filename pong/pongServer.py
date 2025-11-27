@@ -1,15 +1,15 @@
 # =================================================================================================
-# Contributing Authors:     David Macara
-# Email Addresses:          david@macarasoftware.com
-# Date:                     November 21, 2025
-# Purpose:                  Server logic for multiplayer Pong game
-# Misc:                     Handles two simultaneous clients and synchronizes game state
+# Contributing Authors:     David MacDonald, Ian Thornsburg, Ramish Poudel
+# Email Addresses:          David.MacDonald@uky.edu, Ian.Thornsburg@uky.edu, Ramish.Poudel@uky.edu
+# Date:                     November 26, 2025
+# Purpose:                  Server logic for multiplayer pong game
+# Misc:                     Handles two simultaneous clients and syncs game state
 # =================================================================================================
 import socket
 import threading
 import json
 
-# Global game state
+# global game state
 game_state = {
     'left_paddle_y': 215,
     'right_paddle_y': 215,
@@ -25,29 +25,24 @@ game_state = {
     'both_connected': False
 }
 
-# Lock for thread-safe access to game state
+# lock for thread-safe access to game state
 state_lock = threading.Lock()
 
-# Client connection tracking
+# client connection tracking
 clients = {'left': None, 'right': None}
 client_lock = threading.Lock()
 
-# Screen dimensions
+# screen dimensions
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 
 
 def handle_client(client_socket: socket.socket, address: tuple, player_side: str) -> None:
-    """
-    # Author:       David Macara
-    # Purpose:      Handle communication with a single client
-    # Pre:          Client socket is connected, player_side is 'left' or 'right'
-    # Post:         Client is disconnected and removed from clients dictionary
-    """
+    
     print(f"Player {player_side} connected from {address}")
     
     try:
-        # Send initial game info to client
+        # send initial game info to client
         init_data = {
             'screen_width': SCREEN_WIDTH,
             'screen_height': SCREEN_HEIGHT,
@@ -55,17 +50,17 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
         }
         client_socket.sendall(json.dumps(init_data).encode() + b'\n')
         
-        # Main communication loop
+        # main communication loop
         buffer = ""
         while True:
-            # Receive data from client
+            # receive data from client
             data = client_socket.recv(4096).decode()
             if not data:
                 break
             
             buffer += data
             
-            # Process all complete messages (delimited by newlines)
+            # process all complete messages 
             while '\n' in buffer:
                 message, buffer = buffer.split('\n', 1)
                 
@@ -73,13 +68,13 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                     try:
                         update = json.loads(message)
                         
-                        # Update game state with client's data
+                        # update game state with client data
                         with state_lock:
                             if player_side == 'left':
                                 game_state['left_paddle_y'] = update.get('paddle_y', game_state['left_paddle_y'])
                                 game_state['left_moving'] = update.get('moving', '')
                                 
-                                # LEFT player is authoritative for ball and scores
+                                # LEFT player is responsible for ball and scores
                                 if 'ball_x' in update:
                                     game_state['ball_x'] = update['ball_x']
                                     game_state['ball_y'] = update['ball_y']
@@ -91,20 +86,20 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                                 if 'right_score' in update:
                                     game_state['right_score'] = update['right_score']
                                     
-                            else:  # right player
+                            else:  # RIGHT player
                                 game_state['right_paddle_y'] = update.get('paddle_y', game_state['right_paddle_y'])
                                 game_state['right_moving'] = update.get('moving', '')
                             
-                            # Update sync counter
+                            # uipdate sync counter
                             client_sync = update.get('sync', 0)
                             if client_sync > game_state['sync']:
                                 game_state['sync'] = client_sync
                             
-                            # Check if both players are connected
+                            # check both players are connected
                             with client_lock:
                                 game_state['both_connected'] = (clients['left'] is not None and clients['right'] is not None)
                         
-                        # Send current game state back to client
+                        # send current game state back to client
                         with state_lock:
                             response = {
                                 'left_paddle_y': game_state['left_paddle_y'],
@@ -143,12 +138,7 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
 
 
 def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
-    """
-    # Author:       David Macara
-    # Purpose:      Start the Pong game server and accept client connections
-    # Pre:          Port is available for binding
-    # Post:         Server is running and accepting connections
-    """
+    
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
@@ -161,7 +151,7 @@ def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
         while True:
             client_socket, address = server_socket.accept()
             
-            # Determine which paddle to assign
+            # determine which paddle to assign
             with client_lock:
                 if clients['left'] is None:
                     player_side = 'left'
@@ -170,13 +160,13 @@ def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
                     player_side = 'right'
                     clients['right'] = client_socket
                 else:
-                    # Server is full
+                    # full server
                     print(f"Connection from {address} rejected - server full")
                     client_socket.sendall(b'{"error": "Server full"}\n')
                     client_socket.close()
                     continue
             
-            # Start a new thread to handle this client
+            # start a new thread to handle this client
             client_thread = threading.Thread(
                 target=handle_client,
                 args=(client_socket, address, player_side),
@@ -186,7 +176,7 @@ def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
             
             print(f"Assigned {player_side} paddle to {address}")
             
-            # Check if both players are connected
+            # check both players are connected
             with client_lock:
                 if clients['left'] is not None and clients['right'] is not None:
                     print("Both players connected! Game starting...")
