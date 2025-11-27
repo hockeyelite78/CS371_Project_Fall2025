@@ -1,134 +1,123 @@
 PONG GAME - EASY SETUP GUIDE
 =============================
 
-👥 WHAT YOU NEED
-- 2 computers (or 2 terminal windows on 1 computer)
+WHAT YOU NEED
+- 2 computers 
 - Python installed
 - This project folder
 
-📦 STEP 1: INSTALL PYGAME
-Open terminal and type:
-    pip install pygame
+=============================
+          SET UP 
+=============================
 
-That's it for setup!
+- install python, either 3.12 or 3.11 from the python website
 
-🎮 HOW TO PLAY (Same Computer)
-================================
+- if already downloaded or download finished, open terminal
 
-You need 3 terminal windows. Here's how:
+- use "python --version" to check version of python
 
-TERMINAL 1 - START THE SERVER
-------------------------------
-1. Open a terminal
-2. Type: cd pong
-3. Type: python pongServer.py
-4. You should see "Waiting for 2 players to connect..."
-5. LEAVE THIS RUNNING! Don't close it.
+- in terminal enter "git clone https://github.com/hockeyelite78/CS371_Project_Fall2025.git"
+     - this should add the project code to your computer 
 
-TERMINAL 2 - PLAYER 1 (Left Paddle)
-------------------------------------
-1. Open a NEW terminal (don't close terminal 1!)
-2. Type: cd pong
-3. Type: python pongClient.py
-4. A Pong game window will appear
-5. Wait for player 2...
+- now enter "cd CS371_Project_Fall2025"
+     - you are now in the project folder 
 
-TERMINAL 3 - PLAYER 2 (Right Paddle)
-------------------------------------
-1. Open ANOTHER NEW terminal
-2. Type: cd pong
-3. Type: python pongClient.py
-4. Another Pong game window appears
-5. THE GAME STARTS!
+- enter "python -m venv venv" 
+     - this create the virtual environment
 
-🕹️ HOW TO CONTROL
-------------------
-Both players use arrow keys:
-- UP arrow = move paddle up
-- DOWN arrow = move paddle down
+- enter "venv\Scripts\activate"
+     - this activates the virtual environment
 
-First to 5 points wins!
+- enter "cd pong"
+     - change to pong folder of project
 
-🌐 PLAY WITH A FRIEND (Different Computers)
-============================================
+- enter "pip install pygame"
+     - installs the necessary packages to the pong folder
 
-ON THE SERVER COMPUTER (Host):
--------------------------------
-1. Find your IP address:
-   - Mac: System Settings → Network → Your IP is there
-   - Windows: Open Command Prompt, type: ipconfig
-   - Look for something like: 192.168.1.5
-   
-2. Write down your IP address!
+================================================
+              PLAYING THE GAME
+================================================
 
-3. Open terminal and type:
-   cd pong
-   python pongServer.py
+------------------------------------------------
+PLAYER ON COMPUTER WITH SERVER RUNNING:
+------------------------------------------------
 
-4. Server is running! Tell your friend your IP address.
+RUNNING THE SERVER:
 
-ON YOUR FRIEND'S COMPUTER (Player):
-------------------------------------
-1. Open the file pongClient.py in a text editor
+- open a terminal window and navigate to the pong folder
+     - path should be "(venv)...(default user path)...\CS371_Project_Fall2025\pong>"
+     - make sure you see (venv), if not, enter venv\Scripts\activate in terminal
 
-2. Find this line near the bottom:
-   SERVER_IP = "127.0.0.1"
+- enter "python pongServer.py"
+     - should see "==================================================
+                   Pong Game Server
+                   ==================================================
+                   Pong server started on 0.0.0.0:12345
+                   Waiting for 2 players to connect..."
 
-3. Change it to your IP address. Example:
-   SERVER_IP = "192.168.1.5"
 
-4. Save the file
+RUNNING THE CLIENT:
 
-5. Open terminal and type:
-   cd pong
-   python pongClient.py
+- open a NEW terminal window
 
-6. Game window appears!
+- navigate to the pong folder of the project
+     - path should be "(default user path)...\CS371_Project_Fall2025\pong>"
 
-ON YOUR COMPUTER (Host is also Player):
-----------------------------------------
-1. Open another terminal
-2. Type: cd pong
-3. Type: python pongClient.py
-4. Game starts when both connected!
+- activate the virtual environment
+     - enter "venv\Scripts\activate"
 
-⚠️ TROUBLESHOOTING
-==================
+- path should now show "(venv)...(default user path)...\CS371_Project_Fall2025\pong>"
 
-Problem: "No module named pygame"
-Fix: Type: pip install pygame
+- enter "python pongClient.py"
 
-Problem: "No module named _tkinter"
-Fix: You have the no-GUI version, this is fine! Just use it as-is.
+- a window pops up showing the join button, it also has two fields for "Server IP" and "Server Port"
 
-Problem: "Connection refused"
-Fix: Make sure the server is running first in Terminal 1!
+- do not change either the "Server IP" or "Server Port" fields, and click join
 
-Problem: Game closes immediately
-Fix: Make sure both pongServer.py and pongClient.py are the FIXED versions
+- the game window screen should pop up showing "Waiting for opponent to connect"
+     
+- once opponent connects a countdown from 3, 2, 1 shows and the game starts
 
-Problem: Can't connect from different computers
-Fix: Make sure you're on the same WiFi network!
+- use the up and down arrows to move your paddle
 
-Problem: Ball doesn't move or game is weird
-Fix: You need to use the FIXED versions of the files (pongServer_fixed.py and pongClient_fixed.py)
 
-🎯 QUICK SUMMARY
-================
-1. Server first (python pongServer.py)
-2. Client 1 second (python pongClient.py) 
-3. Client 2 third (python pongClient.py)
-4. Use arrow keys to play!
-5. First to 5 wins!
+------------------------------------------------
+PLAYER ON COMPUTER WITHOUT SERVER RUNNING:
+------------------------------------------------
 
-That's it! Have fun! 🏓
+- open terminal
 
-📝 WHAT FILES DO I NEED?
-=========================
-pongServer.py (or pongServer_fixed.py)
-pongClient.py (or pongClient_fixed.py)
-assets/ folder (has sounds and images)
+- make sure you are in the pong folder
+     - path should be "(venv)...(default user path)...\CS371_Project_Fall2025\pong>"
 
-If you downloaded files with "_fixed" in the name, rename them:
-- pongServer_fixed.py → pongServer.py
-- pongClient_fixed.py → pongClient.py
+- enter "python pongClient.py"
+     - a window pops up showing the join button, it also has two fields for "Server IP" and "Server Port"
+       * do not change server port number *
+
+- get the IP address from the computer running the pongServer.py
+     - do this by entering "ifconfig | grep "inet " | grep -v 127.0.0.1" on the computer with the running server          window
+     - you will get something like "inet 192.168.1.243 netmask 0xffffff00 broadcast 192.168.1.255"
+     - inet 192.168.1.243 <-- this is the correct IP address to enter into the "Server IP" field 
+
+- enter the Server IP into the "Server IP" field and click join
+     - the game window screen should pop up showing "Waiting for opponent to connect"
+
+- once opponent connects, a countdown from 3, 2, 1 shows and the game starts
+
+- use the up and down arrow keys to move your paddle
+
+
+================================================= 
+                IMPORTANT NOTES
+=================================================
+
+- both computers must be on the same wifi or vpn networks
+
+- to play a new game after one has finished, you must restart the server and connect the clients again
+     - to restart the server: * disconnect both client winows by closing the game windows on each computer,
+                              * close the server by navigating to the server window and pressing "ctrl+c"
+                              * in the same server window enter "python pongServer.py" to restart the server
+                              * go into both client windows and enter "python pongClient.py" 
+                              * simply click join on the client game window on the computer in which the server                                   is running on
+                              * in the client window that is not running the server, you must enter in the IP                                     address of the computer that is running the Server again, once the correct IP is                                  entered into the "Server IP" field, click join
+                         
