@@ -14,7 +14,7 @@ Github Link: https://github.com/hockeyelite78/CS371_Project_Fall2025.git
 
 General Info
 ============
-This file describes how to install/run your program and anything else you think the user should know
+This file describes how to install/run our program and anything else the user should know
 
 
 Install Instructions
