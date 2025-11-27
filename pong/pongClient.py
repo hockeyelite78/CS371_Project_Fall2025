@@ -185,16 +185,15 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                     opponentPaddleObj.rect.y = server_data.get('left_paddle_y', opponentPaddleObj.rect.y)
                     opponentPaddleObj.moving = server_data.get('left_moving', '')
                 
-                # RIGHT player receives ball position from server (LEFT player is authoritative)
+                # RIGHT player receives everything from server (LEFT player is authoritative)
                 if playerPaddle == "right":
                     ball.rect.x = server_data.get('ball_x', ball.rect.x)
                     ball.rect.y = server_data.get('ball_y', ball.rect.y)
                     ball.xVel = server_data.get('ball_xVel', ball.xVel)
                     ball.yVel = server_data.get('ball_yVel', ball.yVel)
-                
-                # ALWAYS update scores from server to prevent glitching
-                lScore = server_data.get('left_score', lScore)
-                rScore = server_data.get('right_score', rScore)
+                    # RIGHT player ONLY gets scores from server
+                    lScore = server_data.get('left_score', lScore)
+                    rScore = server_data.get('right_score', rScore)
 
         # update player paddle position
         if playerPaddleObj.moving == "down":
