@@ -38,7 +38,12 @@ SCREEN_HEIGHT = 480
 
 
 def handle_client(client_socket: socket.socket, address: tuple, player_side: str) -> None:
-    
+    """
+    # Author:       David MacDonald
+    # Purpose:      handle communication with single client in separate thread
+    # Pre:          client socket is connected, player_side is 'left' or 'right'
+    # Post:         client is disconnected and removed from clients dictionary
+    """
     print(f"Player {player_side} connected from {address}")
     
     try:
@@ -74,7 +79,7 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                                 game_state['left_paddle_y'] = update.get('paddle_y', game_state['left_paddle_y'])
                                 game_state['left_moving'] = update.get('moving', '')
                                 
-                                # LEFT player is responsible for ball and scores
+                                # LEFT player is authoritative for ball and scores
                                 if 'ball_x' in update:
                                     game_state['ball_x'] = update['ball_x']
                                     game_state['ball_y'] = update['ball_y']
@@ -90,12 +95,12 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
                                 game_state['right_paddle_y'] = update.get('paddle_y', game_state['right_paddle_y'])
                                 game_state['right_moving'] = update.get('moving', '')
                             
-                            # uipdate sync counter
+                            # update sync counter
                             client_sync = update.get('sync', 0)
                             if client_sync > game_state['sync']:
                                 game_state['sync'] = client_sync
                             
-                            # check both players are connected
+                            # check if both players are connected
                             with client_lock:
                                 game_state['both_connected'] = (clients['left'] is not None and clients['right'] is not None)
                         
@@ -138,7 +143,12 @@ def handle_client(client_socket: socket.socket, address: tuple, player_side: str
 
 
 def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
-    
+    """
+    # Author:       David MacDonald
+    # Purpose:      start pong game server and accept client connections
+    # Pre:          port is available for binding
+    # Post:         server is running and accepting connections until interrupted
+    """
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
@@ -160,13 +170,13 @@ def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
                     player_side = 'right'
                     clients['right'] = client_socket
                 else:
-                    # full server
+                    # server full
                     print(f"Connection from {address} rejected - server full")
                     client_socket.sendall(b'{"error": "Server full"}\n')
                     client_socket.close()
                     continue
             
-            # start a new thread to handle this client
+            # start new thread to handle this client
             client_thread = threading.Thread(
                 target=handle_client,
                 args=(client_socket, address, player_side),
@@ -176,7 +186,7 @@ def start_server(host: str = '0.0.0.0', port: int = 12345) -> None:
             
             print(f"Assigned {player_side} paddle to {address}")
             
-            # check both players are connected
+            # check if both players are connected
             with client_lock:
                 if clients['left'] is not None and clients['right'] is not None:
                     print("Both players connected! Game starting...")

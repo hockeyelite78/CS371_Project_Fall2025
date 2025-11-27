@@ -22,10 +22,10 @@ data_lock = threading.Lock()
 
 def receive_updates(client: socket.socket) -> None:
     """
-    # Author:       David Macara
-    # Purpose:      Continuously receive game state updates from server
-    # Pre:          Client socket is connected to server
-    # Post:         server_data is updated with latest game state
+    # Author:       David MacDonald
+    # Purpose:      continuously receive game state updates from server in background thread
+    # Pre:          client socket is connected to server
+    # Post:         server_data is updated with latest game state from server
     """
     global server_data
     buffer = ""
@@ -54,6 +54,12 @@ def receive_updates(client: socket.socket) -> None:
 
 
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
+    """
+    # Author:       David MacDonald
+    # Purpose:      main game loop that handles rendering, input, and network sync
+    # Pre:          client is connected to server and has received initial game parameters
+    # Post:         game runs until player quits or connection is lost
+    """
     
     # pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
@@ -112,7 +118,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 pygame.quit()
                 sys.exit()
         
-        # send a heartbeat to server to trigger response with both_connected flag
+        # send heartbeat to server to trigger response with both_connected flag
         try:
             heartbeat = {
                 'paddle_y': playerPaddleObj.rect.y,
@@ -179,14 +185,14 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                     opponentPaddleObj.rect.y = server_data.get('left_paddle_y', opponentPaddleObj.rect.y)
                     opponentPaddleObj.moving = server_data.get('left_moving', '')
                 
-                # RIGHT player receives ball position from server 
+                # RIGHT player receives ball position from server (LEFT player is authoritative)
                 if playerPaddle == "right":
                     ball.rect.x = server_data.get('ball_x', ball.rect.x)
                     ball.rect.y = server_data.get('ball_y', ball.rect.y)
                     ball.xVel = server_data.get('ball_xVel', ball.xVel)
                     ball.yVel = server_data.get('ball_yVel', ball.yVel)
                 
-                # update scores from server
+                # ALWAYS update scores from server to prevent glitching
                 lScore = server_data.get('left_score', lScore)
                 rScore = server_data.get('right_score', rScore)
 
@@ -210,7 +216,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             if playerPaddle == "left":
                 ball.updatePos()
 
-                # if the ball makes it past the edge of the screen, update score
+                # if ball makes it past edge of screen, update score
                 if ball.rect.x > screenWidth:
                     lScore += 1
                     pointSound.play()
@@ -220,7 +226,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                     pointSound.play()
                     ball.reset(nowGoing="right")
                     
-                # if the ball hits a paddle
+                # if ball hits a paddle
                 if ball.rect.colliderect(playerPaddleObj.rect):
                     bounceSound.play()
                     ball.hitPaddle(playerPaddleObj.rect.center[1])
@@ -228,7 +234,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                     bounceSound.play()
                     ball.hitPaddle(opponentPaddleObj.rect.center[1])
                     
-                # if the ball hits a wall
+                # if ball hits a wall
                 if ball.rect.colliderect(topWall) or ball.rect.colliderect(bottomWall):
                     bounceSound.play()
                     ball.hitWall()
@@ -236,7 +242,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             
             pygame.draw.rect(screen, WHITE, ball)
 
-        # draw dotted line in the center
+        # draw dotted line in center
         for i in centerLine:
             pygame.draw.rect(screen, WHITE, i)
         
@@ -262,7 +268,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 'sync': sync
             }
             
-            # only LEFT player sends ball data
+            # only LEFT player sends ball data and scores
             if playerPaddle == "left":
                 update['ball_x'] = ball.rect.x
                 update['ball_y'] = ball.rect.y
@@ -279,6 +285,12 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
 
 def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
+    """
+    # Author:       David MacDonald
+    # Purpose:      connect to server and receive initial game parameters
+    # Pre:          server is running and accepting connections at given ip:port
+    # Post:         client is connected and playGame is started, or error is displayed
+    """
     # validate inputs
     if not ip or not port:
         errorLabel.config(text="Please enter both IP address and port")
@@ -292,7 +304,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
         errorLabel.update()
         return
     
-    # create a socket and connect to server
+    # create socket and connect to server
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.settimeout(10)
     
@@ -335,7 +347,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
         # remove timeout for gameplay
         client.settimeout(None)
         
-        # close window and start the game
+        # close window and start game
         app.withdraw()
         playGame(screenWidth, screenHeight, playerPaddle, client)
         app.quit()
@@ -359,6 +371,12 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
 
 
 def startScreen():
+    """
+    # Author:       David MacDonald
+    # Purpose:      display GUI for entering server connection info
+    # Pre:          tkinter is available and assets/images/logo.png exists
+    # Post:         GUI window is shown and joinServer is called when join button is clicked
+    """
     app = tk.Tk()
     app.title("Server Info")
 
